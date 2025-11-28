@@ -5,6 +5,6 @@ build/
 dist/
 wheels/
 *.egg-info
-gemini-api-key.env
+.env
 # Virtual environments
 .venv
