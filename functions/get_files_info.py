@@ -1,40 +1,40 @@
 import os
+from google.genai import types
 
+#This is the function itself to retreive the specified files information
 def get_files_info(working_directory, directory="."):
-    absolute_working_directory = os.path.abspath(working_directory)
-    target_directory = os.path.join(working_directory, directory)
-
-    if target_directory.startswith(absolute_working_directory) == False:
-        print(absolute_working_directory)
-        print(target_directory)
-        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-    # elif not os.path.isdir(abs_path):
-    #     return f'Error: "{directory}" is not a directory'
-    else:
-        print(absolute_working_directory)
-        print(target_directory)
-        return "Good"
+    try:
+        abs_working_directory = os.path.abspath(working_directory)
+        abs_target_directory = os.path.normpath(os.path.join(abs_working_directory, directory))
+        if os.path.commonpath([abs_working_directory, abs_target_directory]) != abs_working_directory:
+            return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
+        if not os.path.isdir(abs_target_directory):
+            return f'Error: "{directory}" is not a directory'
+        
+        files_info = []
+        for filename in os.listdir(abs_target_directory):
+            filepath = os.path.join(abs_target_directory, filename)
+            file_size = 0
+            is_dir = os.path.isdir(filepath)
+            file_size = os.path.getsize(filepath)
+            files_info.append(
+                f"- {filename}: file_size={file_size} bytes, is_dir={is_dir}"
+            )
+        return "\n".join(files_info)
+    except Exception as e:
+        return f"Error listing files: {e}"
     
-#Examples to de-bug
-AI_directory = "liam-burns/AI-Agent-Project"
-path_1 = "calculator/tests.py"
-path_2 = 'calculator'
-path_3 = 'bookbot'
-
-print(get_files_info(AI_directory, path_3))
-
-
-
-'''
-Here are some standard library functions you'll find helpful:
-
-os.path.abspath(): Get an absolute path from a relative path
-os.path.join(): Join two paths together safely (handles slashes)
-.startswith(): Check if a string starts with a substring
-os.path.isdir(): Check if a path is a directory
-os.listdir(): List the contents of a directory
-os.path.getsize(): Get the size of a file
-os.path.isfile(): Check if a path is a file
-.join(): Join a list of strings together with a separator
-
-'''
+#This is the schema for when the LLM will try and decide to call the get_files_info function.
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in a specified directory relative to the working directory, providing file size and directory status",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="Directory path to list files from, relative to the working directory (default is the working directory itself)",
+            ),
+        },
+    ),
+)

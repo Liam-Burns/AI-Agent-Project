@@ -11,8 +11,8 @@ class Calculator:
         self.precedence = {
             "+": 1,
             "-": 1,
-            "*": 2,
-            "/": 2,
+            "*": 2, # Changed precedence for multiplication to 2
+            "/": 2, # Changed precedence for division to 2
         }
 
     def evaluate(self, expression):
